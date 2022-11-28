@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: GPL-2.0
+#
+# PCI Endpoint Functions
+#
+
+config PCI_EPF_TEST
+	tristate "PCI Endpoint Test driver"
+	depends on PCI_ENDPOINT
+	select CRC32
+	help
+	   Enable this configuration option to enable the test driver
+	   for PCI Endpoint.
+
+	   If in doubt, say "N" to disable Endpoint test driver.
+
+config PCI_EPF_MILBEAUT
+	tristate "PCI Endpoint reference driver for Milbeaut"
+	depends on PCI_ENDPOINT
+	select CRC32
+	help
+	   Enable this configuration option to enable the reference
+	   EP driver for Milbeaut M20V.
+
+	   If in doubt, say "N" to disable Endpoint test driver.

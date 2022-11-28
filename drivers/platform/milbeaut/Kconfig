@@ -1,0 +1,24 @@
+config PLATFORM_MILBEAUT
+        bool "SNI Milbeaut platform driver Support"
+	depends on ARCH_MILBEAUT
+        help
+          Socionext Milbeaut platform driver for M20V
+
+config SNI_MISCTOP
+        bool "SNI MISCTOP Hardware Support"
+	depends on PLATFORM_MILBEAUT
+        help
+          Socionext MISCTOP register driver for M20V
+
+config SNI_EXSINT
+	bool "SNI EXSINT interrupt Support"
+	depends on PLATFORM_MILBEAUT
+        help
+          Socionext EXSTOP INT register driver for M20V
+
+config SNI_CCLOGIC
+        tristate "SNI CCLOGIC interrupt Support"
+        depends on PLATFORM_MILBEAUT
+        help
+          Socionext CCLOGIC INT register driver for M20V
+

@@ -1,0 +1,7 @@
+menuconfig KARINE_CPU_SWITCH
+	bool "Switch CPU to Linux from RTOS on Milbeaut Evb boards"
+	default n
+	depends on ARCH_MILBEAUT
+	help
+	  Support for switch CPU to Linux from RTOS on Milbeaut Evb boards
+

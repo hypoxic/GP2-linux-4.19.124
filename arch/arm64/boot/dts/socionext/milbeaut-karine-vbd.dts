@@ -1,0 +1,416 @@
+// SPDX-License-Identifier: GPL-2.0
+/* Socionext Milbeaut KARINE Evaluation Board */
+/dts-v1/;
+#include "milbeaut-karine.dtsi"
+#include "karine-rtos.h"
+
+/ {
+	model = "Socionext KARINE EVB";
+	compatible = "socionext,milbeaut-karine-evb", "socionext,karine";
+
+	aliases {
+		serial = &uart3;
+	};
+
+	chosen {
+		// for VBD
+		bootargs = "consoleblank=0 init=/sbin/finit root=/dev/ipcublk rootwait ro console=ttyUSI3,115200n8 nr_cpus=4 maxcpus=1";
+		// for RAMFS bootup
+		//bootargs = "rdinit=/sbin/finit initrd=0x46000000,INITRAMFS_SIZE rootwait nr_cpus=4 maxcpus=2 nokaslr earlycon";
+		stdout-path = "serial:115200n8";
+		//linux,initrd-start = <0 0x46000000>;
+		//linux,initrd-end =   <0 0x50000000>;
+	};
+
+	cpus {
+		cpu@0 {
+			status = "disabled";
+		};
+		cpu@1 {
+			status = "disabled";
+		};
+		cpu@2 {
+			status = "disabled";
+		};
+		cpu@3 {
+			status = "okay";
+		};
+	};
+
+	clocks {
+		uclk48xi: uclk48xi {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency = <48000000>;
+		};
+
+		uclk48xi_div2: uclk48xi_div2 {
+			compatible = "fixed-factor-clock";
+			#clock-cells = <0>;
+			clocks = <&uclk48xi>;
+			clock-div = <2>;
+			clock-mult = <1>;
+		};
+
+		genclk: genclk {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency = <27000000>;
+		};
+
+		aumclk: aumclk {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency = <196000000>;
+		};
+	};
+
+	memory@50000000 {
+		device_type = "memory";
+		reg = <0 0x50000000 0 0x8000000>;
+	};
+
+	shared_commem: shared_commem {
+		/* To be moved into dtb for co-boot with rtos */
+		compatible = "socionext, shared-commem";
+		address64;
+		buf-addr = <SHMEM_UPPER_ADDR GET_IPCU_BUFFER_ADDR_VBD>;
+		buf-size = <SHMEM_UPPER_SIZE GET_IPCU_BUFFER_SIZE_VBD>;
+		sync-addr = <SHMEM_UPPER_ADDR GET_IPCU_SYNC_ADDR_VBD>;
+		sync-size = <SHMEM_UPPER_SIZE GET_IPCU_SYNC_SIZE_VBD>;
+		rd-pointer-addr = <SHMEM_UPPER_ADDR GET_TS_READ_POINTER_ADDR_VBD>;
+		rd-pointer-size = <SHMEM_UPPER_SIZE GET_TS_READ_POINTER_SIZE_VBD>;
+		wt-pointer-addr = <SHMEM_UPPER_ADDR GET_TS_WRITE_POINTER_ADDR_VBD>;
+		wt-pointer-size = <SHMEM_UPPER_SIZE GET_TS_WRITE_POINTER_SIZE_VBD>;
+		movie-rec-addr = <SHMEM_UPPER_ADDR GET_MOVIE_RECORD0_DFS_ADDR_VBD>;
+		movie-rec-size = <SHMEM_UPPER_SIZE GET_MOVIE_RECORD0_DFS_SIZE_VBD>;
+		term-io-addr = <SHMEM_UPPER_ADDR GET_TERMINAL_IO_ADDR_VBD>;
+		term-io-size = <SHMEM_UPPER_SIZE GET_TERMINAL_IO_SIZE_VBD>;
+	};
+
+	cpuswitch:cpuswitch@00000000 {
+		status = "okay";
+		compatible = "socionext,smp-cpuswitch";
+		#address-cells  = <2>;
+		#size-cells = <2>;
+		reg = <0 0x0D154344 0 0x4>;
+		sgi_no = <8>;
+	};
+
+	sn_ipcufs_rtos: snipcufs_rtos@0 {
+		compatible = "socionext,ipcufs-rtos";
+		ipcu_unit = <0>; // IPCU Unit
+		ipcu_mb = <2 3>;  // Send/Recv Channel
+	};
+
+	sn_vblk_rtos: snvblk_rtos@0 {
+		compatible = "socionext,vblk-rtos";
+		ipcu_unit = <1>;  // IPCU Unit
+		ipcu_mb = <1 0>;  // Send/Recv Channel
+	};
+	soc {
+		gpio: pinctrl@d151000 {
+				status = "okay";
+			exiu0: exiu0@c86e000 {
+				status = "disabled";
+			};
+			exiu1: exiu1@0xc86f000 {
+				status = "disabled";
+			};
+		};
+		gic: interrupt-controller@d000000 {
+			black-list = <
+			  0   1   2   3   4   5   6              10      12  13
+			 16      18  19          22  23      25          28      30
+			 32  33      35      37      39  40  41  42      44  45
+			 48      50  51          54  55      57          60      62
+			 64  65      67      69      71  72  73  74  75  76  77  78  79
+			 80  81  82  83  84  85  86  87  88  89  90  91  /* 92 to 95 for CNN  */
+			 96  97  98  99 100 101 102 103 104 105 106 107 108 109 110 111
+			112 113 114 115 116 117 118 119 120 121 122 123 124 125 126 127
+			128 129 130 131 132 133 134 135 136 137 138 139 140 141 142 143
+			144 145 146 147 148 149 150 151 152 153 154 155 156 157 158 159
+			160 161 162 163 164 165 166 167 168 169 170 171 172 173 174 175
+			176 177 178 179 180 181 182 183 184 185 186 187 188 189 190 191
+			192 193 194 195 196 197 198 199 200 201 202 203 204 205 206 207
+			208 209 210 211 212 213 214 215 216 217 218 219 220 221 222 223
+			224 225 226 227 228 229 230 231 232 233 234 235 236 237
+			        242 243 244 245 246     248 249
+			        258 259                 264 265 266 267 268         271
+			272 273 274 275 276 277 278 279 280 281 282 283 284 285 286 287
+			288 289 290 291 292 293 294 295 296 297 298 299 300 301 302 303
+			304 305 306 307 308 309 310 311 312 313 314 315 316 317 318 319
+			320 321 322 323 324 325 326 327 328 329 330 331 332 333 334
+			336 337 338 339 340 341     343 344 345 346 347 348 349 350 351
+			352 353 354 355 356 357 358 359 360 361 362 363 364 365 366 367
+			368 369 370 371 372 373 374 375 376 377 378 379 380 381 382 383
+			384 385 386 387 388 389 390 391 392 393 394 395 396 397 398 399
+			400 401 402 403 404 405 406 407 408 409 410 411 412 413 414 415
+			>;
+		};
+		exs_32bus {
+			sd0: mmc0@19830000 {
+				status = "okay";
+				keep-power-in-suspend;
+				non-removable;
+				quirk-host-off-card-on;
+			};
+			sd1: mmc1@19820000 {
+				status = "disabled";
+			};
+		};
+
+		/* To be moved into dtb for co-boot with rtos */
+		snrtos_ipcu00: snrtos0@0 {
+			compatible = "socionext,ipcu-device";
+			dst-unit = <0>;
+			dst-mb = <0>;
+			interrupts = <0 11 4>;
+			direction = "recv";
+		};
+
+		snrtos_ipcu01: snrtos0@1 {
+			compatible = "socionext,ipcu-device";
+			dst-unit = <0>;
+			dst-mb = <1>;
+			interrupts = <0 20 4>;
+			direction = "send";
+		};
+
+		snrtos_ipcu02: snrtos0@2 {
+			compatible = "socionext,ipcu-device";
+			dst-unit = <0>;
+			dst-mb = <2>;
+			interrupts = <0 21 4>;
+			direction = "send";
+		};
+
+		snrtos_ipcu03: snrtos0@3 {
+			compatible = "socionext,ipcu-device";
+			dst-unit = <0>;
+			dst-mb = <3>;
+			interrupts = <0 14 4>;
+			direction = "recv";
+		};
+
+		snrtos_ipcu04: snrtos0@4 {
+			compatible = "socionext,ipcu-device";
+			dst-unit = <0>;
+			dst-mb = <4>;
+			interrupts = <0 15 4>;
+			direction = "recv";
+		};
+
+		snrtos_ipcu05: snrtos0@5 {
+			compatible = "socionext,ipcu-device";
+			dst-unit = <0>;
+			dst-mb = <5>;
+			interrupts = <0 24 4>;
+			direction = "send";
+		};
+
+		snrtos_ipcu06: snrtos0@6 {
+			compatible = "socionext,ipcu-device";
+			dst-unit = <0>;
+			dst-mb = <6>;
+			interrupts = <0 17 4>;
+			direction = "recv";
+		};
+
+		snrtos_ipcu07: snrtos0@7 {
+			compatible = "socionext,ipcu-device";
+			dst-unit = <0>;
+			dst-mb = <7>;
+			interrupts = <0 26 4>;
+			direction = "send";
+		};
+
+		snrtos_ipcu10: snrtos1@0 {
+			compatible = "socionext,ipcu-device";
+			dst-unit = <1>;
+			dst-mb = <0>;
+			interrupts = <0 27 4>;
+			direction = "recv";
+		};
+
+		snrtos_ipcu11: snrtos1@1 {
+			compatible = "socionext,ipcu-device";
+			dst-unit = <1>;
+			dst-mb = <1>;
+			interrupts = <0 36 4>;
+			direction = "send";
+		};
+
+		snrtos_ipcu12: snrtos1@2 {
+			compatible = "socionext,ipcu-device";
+			dst-unit = <1>;
+			dst-mb = <2>;
+			interrupts = <0 29 4>;
+			direction = "recv";
+		};
+
+		snrtos_ipcu13: snrtos1@3 {
+			compatible = "socionext,ipcu-device";
+			dst-unit = <1>;
+			dst-mb = <3>;
+			interrupts = <0 38 4>;
+			direction = "send";
+		};
+
+		snrtos_ipcu14: snrtos1@4 {
+			compatible = "socionext,ipcu-device";
+			dst-unit = <1>;
+			dst-mb = <4>;
+			src-int-ch = <10>;
+			dst-int-ch = <4>;
+			interrupts = <0 31 4>;
+			direction = "recv";
+		};
+
+		snrtos_ipcu15: snrtos1@5 {
+			compatible = "socionext,ipcu-device";
+			dst-unit = <1>;
+			dst-mb = <5>;
+			src-int-ch = <11>;
+			dst-int-ch = <5>;
+			interrupts = <0 38 4>;
+			direction = "send";
+		};
+
+		peri_32bus {
+			hdmac0: hdmac@e100000 {
+				status = "disabled";
+			};
+			hdmac1: hdmac@e110000 {
+				status = "disabled";
+			};
+			hdmac2: hdmac@e120000 {
+				status = "disabled";
+			};
+			hdmac3: hdmac@e130000 {
+				status = "disabled";
+			};
+		};
+
+		sni_spi0: spi@f000000 {
+			status = "disabled";
+		};
+		sni_spi1: spi@f001000 {
+			status = "disabled";
+		};
+		sni_spi2: spi@f002000 {
+			status = "disabled";
+		};
+		sni_spi3: spi@f003000 {
+			status = "disabled";
+		};
+
+		i2c0: i2c@e005000 {
+			status = "disabled";
+		};
+		i2c1: i2c@e005200 {
+			status = "disabled";
+		};
+		i2c2: i2c@e005400 {
+			status = "disabled";
+		};
+		i2c3: i2c@e005600 {
+			status = "disabled";
+		};
+		i2c4: i2c@e005800 {
+			status = "disabled";
+		};
+
+		uart0: usio_uart@e700000 {
+			status = "disabled";
+			index = <0>;
+		};
+		uart1: usio_uart@e700010 {
+			status = "disabled";
+			index = <1>;
+		};
+		uart2: usio_uart@e700020 {
+			status = "disabled";
+			index = <2>;
+		};
+		uart3: usio_uart@e700030 {
+			status = "okay";
+			index = <3>;
+		};
+		uart4: usio_uart@e700040 {
+			status = "disabled";
+			index = <4>;
+		};
+
+		watchdog@c86c000 {
+			status = "disabled";
+		};
+
+		pcie0: pcie@1b000000 {
+			status = "disabled";
+		};
+		pcie1: pcie@1b400000 {
+			status = "disabled";
+		};
+
+		exstop_int: exsint@1ba01010 {
+			status = "disabled";
+		};
+		arm_32bus {
+			arm_xdmac0: dma-controller@c840000 {
+				status = "disabled";
+			};
+			arm_xdmac1: dma-controller@c850000 {
+				status = "disabled";
+			};
+		};
+		dsp_32bus {
+			xm6: xm6_peri {
+				status = "okay";
+			};
+			dsp_ipcu_0: dsp_ipcu_0 {
+				status = "okay";
+			};
+			dsp_ipcu_1: dsp_ipcu_1 {
+				status = "okay";
+			};
+		};
+		// Uncomment to enable LPM mode for BCM/Synaptic chip
+		// bluesleep {
+		// 	compatible = "brcm,bluesleep";
+		// 	brcm,bt_host_wake = <&gpio 33 0>;
+		// 	brcm,bt_ext_wake = <&gpio 4 0>; // interested one!
+		// 	interrupt-parent = <&gpio>;
+		// 	interrupts = <33 0>;
+		// 	irq-gpio = <&gpio 33 0>;
+		// };
+
+	};
+	gpio-leds {
+		compatible = "gpio-leds";
+		led87 {
+			status = "disabled";
+			lavel = "lled87";
+			gpios = <&gpio 55 GPIO_ACTIVE_HIGH>;
+			linux,default-trigger = "off";
+		};
+		led25 {
+			status = "disabled";
+			lavel = "lled25";
+			gpios = <&gpio 21 GPIO_ACTIVE_HIGH>;
+			linux,default-trigger = "off";
+		};
+		led26 {
+			status = "disabled";
+			lavel = "lled26";
+			gpios = <&gpio 22 GPIO_ACTIVE_HIGH>;
+			linux,default-trigger = "off";
+		};
+		led27 {
+			status = "disabled";
+			lavel = "lled27";
+			gpios = <&gpio 23 GPIO_ACTIVE_HIGH>;
+			linux,default-trigger = "off";
+		};
+	};
+};

@@ -1,0 +1,134 @@
+// SPDX-License-Identifier: GPL-2.0
+/* Socionext Milbeaut M10V Evaluation Board */
+/dts-v1/;
+#include "milbeaut-m10v.dtsi"
+#include "mlb01-rtos.h"
+
+/ {
+	model = "Socionext M10V EVB";
+	compatible = "socionext,milbeaut-m10v-evb", "socionext,sc2000a";
+
+	aliases {
+		serial0 = &uart1;
+	};
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		enable-method = "socionext,milbeaut-m10v-smp";
+		cpu@f00 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a7";
+			reg = <0xf00>;
+		};
+		cpu@f01 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a7";
+			reg = <0xf01>;
+		};
+		cpu@f02 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a7";
+			reg = <0xf02>;
+		};
+		cpu@f03 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a7";
+			reg = <0xf03>;
+		};
+	};
+	sram@0 {
+		compatible = "mmio-sram";
+		reg = <0x0 0x10000>;
+		#address-cells = <1>;
+		#size-cells = <1>;
+		ranges = <0 0x0 0x10000>;
+	};
+	trampoline: trampoline@0xf100 {
+		compatible = "socionext,smp-trampoline";
+		reg = <0xf100 0x100>;
+	};
+
+	chosen {
+//		bootargs = "rdinit=/sbin/finit rootwait earlycon";
+//		bootargs = "consoleblank=0 loglevel=4 rdinit=/sbin/finit rootwait earlycon";
+		bootargs = "consoleblank=0 loglevel=4 init=/sbin/finit root=/dev/mmcblk0p2 rootwait  console=ttyUSI0,115200n8 console=/dev/tty1 ";
+		stdout-path = "serial0:115200n8";
+		linux,initrd-start = <0x43000000>;
+		linux,initrd-end =   <0x43F00000>;
+	};
+
+	clocks {
+		uclk40xi: uclk40xi {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency = <40000000>;
+		};
+
+		dummy_clk: clk20m { /* for SD */
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency = <20000000>;
+		};
+	};
+
+	memory@40000000 {
+		device_type = "memory";
+		reg = <0x40000000  0x40000000>, <0xA0000000  0x40000000>;
+	};
+
+	vcc_sdhci3: regulator-vcc-sdhci3 {
+		compatible = "regulator-fixed";
+
+		regulator-name = "SDHCI3 Vcc";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+
+		/* gpio = <&pinctrl MLB01_PIN(6,5) GPIO_ACTIVE_HIGH>;*/
+		gpio = <&pinctrl 53 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		/* enable-at-boot;*/
+	};
+
+	vcc_sdhci2: regulator-vcc-sdhci2 {
+		compatible = "regulator-fixed";
+
+		regulator-name = "SDHCI2 Vcc";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+
+		/* gpio = <&pinctrl MLB01_PIN(6,4) GPIO_ACTIVE_HIGH>;*/
+		gpio = <&pinctrl 52 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		/* enable-at-boot;*/
+	};
+
+	soc {
+		pinctrl: pinctrl@1d022000 {
+			interrupts = <0 54 4>, <0 55 4>, <0 56 4>, <0 57 4>,
+					<0 58 4>, <0 59 4>, <0 60 4>, <0 61 4>,
+					<0 62 4>, <0 63 4>, <0 64 4>, <0 65 4>,
+					<0 66 4>, <0 67 4>, <0 68 4>, <0 69 4>;
+			interrupt-names = "pin-48", "pin-49", "pin-50",
+					 "pin-51", "pin-52", "pin-53",
+					 "pin-54", "pin-55", "pin-56",
+					 "pin-57", "pin-58", "pin-59",
+					 "pin-60", "pin-61", "pin-62",
+					 "pin-63";
+		};
+	
+		sdhci3: mmc@1b010000 {
+			vmmc-supply = <&vcc_sdhci3>;
+		};
+
+		sdhci2: mmc@19130000 {
+			vmmc-supply = <&vcc_sdhci2>;
+		};
+	};
+	snrtos_ipcu00: snrtos0@0 {
+		status = "disable";
+	};
+
+	snrtos_ipcu10: snrtos1@0 {
+		status = "disable";
+	};
+};

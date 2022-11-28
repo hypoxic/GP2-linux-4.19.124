@@ -1,0 +1,4 @@
+menuconfig SNI_DSP
+	bool "SNI DSP Hardware Support"
+	help
+	  XM6/CNN Peripheral driver.

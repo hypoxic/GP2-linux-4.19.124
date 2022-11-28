@@ -1,0 +1,976 @@
+// SPDX-License-Identifier: GPL-2.0
+#include <dt-bindings/interrupt-controller/irq.h>
+#include <dt-bindings/input/input.h>
+#include <dt-bindings/gpio/gpio.h>
+#include <dt-bindings/interrupt-controller/arm-gic.h>
+#include <dt-bindings/clock/milbeaut,m20v-clock.h>
+#include <dt-bindings/reset/milbeaut,m20v-reset.h>
+
+/ {
+	compatible = "socionext,sc2006";
+	#address-cells = <2>;
+	#size-cells = <2>;
+	interrupt-parent = <&gic>;
+
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		cpu@0 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a53";
+			reg = <0x0>;
+			enable-method = "psci";
+		};
+		cpu@1 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a53";
+			reg = <0x1>;
+			enable-method = "psci";
+		};
+		cpu@2 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a53";
+			reg = <0x2>;
+			enable-method = "psci";
+		};
+		cpu@3 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a53";
+			reg = <0x3>;
+			enable-method = "psci";
+		};
+	};
+
+	psci {
+		compatible = "arm,psci-0.2";
+		method = "smc";
+	};
+
+	timer { /* The Generic Timer */
+		compatible = "arm,armv8-timer";
+		interrupts = <GIC_PPI 13
+				(GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_HIGH)>,
+			<GIC_PPI 14
+				(GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_HIGH)>,
+			<GIC_PPI 11
+				(GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_HIGH)>,
+			<GIC_PPI 10
+				(GIC_CPU_MASK_SIMPLE(4) | IRQ_TYPE_LEVEL_HIGH)>;
+	};
+
+	soc {
+		compatible = "simple-bus";
+		#address-cells = <2>;
+		#size-cells = <2>;
+		ranges = <0 0x0 0x0 0x0 0 0xffffffff>; // 00000000h - fffffffeh
+		dma-ranges = <0x4 0x0 0x4 0x0 0x4 0x0>;
+
+		gic: interrupt-controller@d000000 {
+			compatible = "arm,gic-v3";
+			#interrupt-cells = <3>;
+			interrupt-controller;
+			#redistributor-regions = <1>;
+			reg = <0x0 0x0d000000 0x0 0x10000>,	// GICD
+			      <0x0 0x0d080000 0x0 0x80000>;	// GICR: CPUs 3
+			black-list = <>;
+			interrupts = <1 9 4>;
+		};
+
+		clk: clk@d152000 {
+			compatible = "socionext,milbeaut-m20v-2-ccu";
+			reg = <0x0 0xd152000 0x0 0x3000>;
+			#clock-cells = <1>;
+			clocks = <&uclk48xi>, <&aumclk>, <&genclk>;
+			clock-names = "UCLKXI", "AUMCLKI", "GENCLK";
+		};
+
+		rst: reset {
+			compatible = "socionext,milbeaut-m20v-reset";
+			reg = <0x0 0x1ba00200 0x0 0xe00>, <0x0 0x1bb00e00 0x0 0x80>;
+			reg-names = "exstop", "pcie_apb";
+			#reset-cells = <1>;
+		};
+
+		/*
+		 * 32bit reload timer should have two channels a node
+		 * and don't be defined two or more nodes.
+		 */
+		timer@e0000a0 {
+			compatible = "socionext,milbeaut-timer";
+			reg = <0x0 0xe000000 0x0 0x20>;
+			interrupts = <0 225 4>;
+			clocks = <&clk M20V_RCLK_ID>;
+		};
+
+		updown0: updown@e004000 {
+			compatible = "socionext,milbeaut-updown-counter";
+			reg = <0x0 0xe004000 0x0 0x20>;
+			clocks = <&clk M20V_RCLK_ID>;
+			clock-names = "mux";
+			interrupts = <0 242 0x4>;
+			cms_type = <1>;
+		};
+
+		updown1: updown@e004020 {
+			compatible = "socionext,milbeaut-updown-counter";
+			reg = <0x0 0xe004020 0x0 0x20>;
+			clocks = <&clk M20V_RCLK_ID>;
+			clock-names = "mux";
+			interrupts = <0 243 0x4>;
+			cms_type = <1>;
+		};
+
+		updown2: updown@e004040 {
+			compatible = "socionext,milbeaut-updown-counter";
+			reg = <0x0 0xe004040 0x0 0x20>;
+			clocks = <&clk M20V_RCLK_ID>;
+			clock-names = "mux";
+			interrupts = <0 244 0x4>;
+			cms_type = <1>;
+		};
+
+		updown3: updown@e004060 {
+			compatible = "socionext,milbeaut-updown-counter";
+			reg = <0x0 0xe004060 0x0 0x20>;
+			clocks = <&clk M20V_RCLK_ID>;
+			clock-names = "mux";
+			interrupts = <0 245 0x4>;
+			cms_type = <1>;
+		};
+
+		updown4: updown@e004080 {
+			compatible = "socionext,milbeaut-updown-counter";
+			reg = <0x0 0xe004080 0x0 0x20>;
+			clocks = <&clk M20V_RCLK_ID>;
+			clock-names = "mux";
+			interrupts = <0 246 0x4>;
+			cms_type = <1>;
+		};
+
+		updown5: updown@e0040a0 {
+			compatible = "socionext,milbeaut-updown-counter";
+			reg = <0x0 0xe0040a0 0x0 0x20>;
+			clocks = <&clk M20V_RCLK_ID>;
+			clock-names = "mux";
+			interrupts = <0 247 0x4>;
+			cms_type = <1>;
+		};
+
+		peri_32bus {
+			compatible = "simple-bus";
+			#address-cells = <1>;
+			#size-cells = <1>;
+			ranges = <0x0 0x0 0x0 0xfffffffe>; // 00000000h - fffffffeh
+			dma-ranges = <0x0 4 0x0 0xfffffffe>;
+
+			hdmac0: hdmac@e100000 {
+				compatible = "socionext,milbeaut-m20v-hdmac";
+				reg = <0xe100000 0x10000>;
+				interrupts = <0 265 4>,
+							<0 266 4>,
+							<0 267 4>,
+							<0 268 4>,
+							<0 269 4>,
+							<0 270 4>,
+							<0 271 4>,
+							<0 272 4>;
+				#dma-cells = <1>;
+				priority-rotate;
+				clocks = <&clk M20V_HCLK_PERI_MAIN_ID>;
+			};
+
+			hdmac1: hdmac@e110000 {
+				compatible = "socionext,milbeaut-m20v-hdmac";
+				reg = <0xe110000 0x10000>;
+				interrupts = <0 273 4>,
+							<0 274 4>,
+							<0 275 4>,
+							<0 276 4>,
+							<0 277 4>,
+							<0 278 4>,
+							<0 279 4>,
+							<0 280 4>;
+				#dma-cells = <1>;
+				priority-rotate;
+				clocks = <&clk M20V_HCLK_PERI_MAIN_ID>;
+			};
+			hdmac2: hdmac@e120000 {
+				compatible = "socionext,milbeaut-m20v-hdmac";
+				reg = <0xe120000 0x10000>;
+				interrupts = <0 281 4>,
+							<0 282 4>,
+							<0 283 4>,
+							<0 284 4>,
+							<0 285 4>,
+							<0 286 4>,
+							<0 287 4>,
+							<0 288 4>;
+				#dma-cells = <1>;
+				priority-rotate;
+				clocks = <&clk M20V_HCLK_PERI_MAIN_ID>;
+			};
+			hdmac3: hdmac@e130000 {
+				compatible = "socionext,milbeaut-m20v-hdmac";
+				reg = <0xe130000 0x10000>;
+				interrupts = <0 289 4>,
+							<0 290 4>,
+							<0 291 4>,
+							<0 292 4>,
+							<0 293 4>,
+							<0 294 4>,
+							<0 295 4>,
+							<0 296 4>;
+				#dma-cells = <1>;
+				priority-rotate;
+				clocks = <&clk M20V_HCLK_PERI_MAIN_ID>;
+			};
+		};
+
+		sni_spi0: spi@f000000 {
+			compatible = "socionext,milbeaut-spi";
+			clocks = <&clk M20V_SPICLK0_ID>, <&clk M20V_HCLK_PERI_SPI0_ID>;
+			interrupts = <0 323 4>;
+			reg = <0x0 0xf000000 0x0 0x1000>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			dmas = <&hdmac0 28>, <&hdmac0 27>;
+			dma-names = "tx", "rx";
+			fifo-size = <128>;
+			num-cs = <4>;
+			dma-mode = <1>;
+
+			spi0@0 {
+				compatible = "socionext,milbeaut-spidev";
+				reg = <0>;
+				spi-max-frequency = <10000000>;
+				ssout-cont = <2>;
+			};
+
+			spi1@1 {
+				compatible = "socionext,milbeaut-spidev";
+				reg = <1>;
+				spi-max-frequency = <10000000>;
+				ssout-cont = <2>;
+			};
+
+			spi2@2 {
+				compatible = "socionext,milbeaut-spidev";
+				reg = <2>;
+				spi-max-frequency = <10000000>;
+				ssout-cont = <2>;
+			};
+
+			spi3@3 {
+				compatible = "socionext,milbeaut-spidev";
+				reg = <3>;
+				spi-max-frequency = <10000000>;
+				ssout-cont = <2>;
+			};
+		};
+
+		sni_spi1: spi@f001000 {
+			compatible = "socionext,milbeaut-spi";
+			clocks = <&clk M20V_SPICLK1_ID>, <&clk M20V_HCLK_PERI_SPI1_ID>;
+			interrupts = <0 324 4>;
+			reg = <0x0 0xf001000 0x0 0x1000>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			dmas = <&hdmac0 30>, <&hdmac0 29>;
+			dma-names = "tx", "rx";
+			fifo_size = <64>;
+			num-cs = <4>;
+			dma-mode = <1>;
+
+			spi0@0 {
+				compatible = "socionext,milbeaut-spidev";
+				reg = <0>;
+				spi-max-frequency = <10000000>;
+				ssout-cont = <2>;
+			};
+
+			spi1@1 {
+				compatible = "socionext,milbeaut-spidev";
+				reg = <1>;
+				spi-max-frequency = <10000000>;
+				ssout-cont = <2>;
+			};
+
+			spi2@2 {
+				compatible = "socionext,milbeaut-spidev";
+				reg = <2>;
+				spi-max-frequency = <10000000>;
+				ssout-cont = <2>;
+			};
+
+			spi3@3 {
+				compatible = "socionext,milbeaut-spidev";
+				reg = <3>;
+				spi-max-frequency = <10000000>;
+				ssout-cont = <2>;
+			};
+		};
+
+		sni_spi2: spi@f002000 {
+			compatible = "socionext,milbeaut-spi";
+			clocks = <&clk M20V_SPICLK2_ID>, <&clk M20V_HCLK_PERI_SPI2_ID>;
+			interrupts = <0 325 4>;
+			reg = <0x0 0xf002000 0x0 0x1000>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			dmas = <&hdmac0 32>, <&hdmac0 31>;
+			dma-names = "tx", "rx";
+			fifo_size = <64>;
+			num-cs = <4>;
+			dma-mode = <1>;
+
+			spi0@0 {
+				compatible = "socionext,milbeaut-spidev";
+				reg = <0>;
+				spi-max-frequency = <10000000>;
+				ssout-cont = <2>;
+			};
+
+			spi1@1 {
+				compatible = "socionext,milbeaut-spidev";
+				reg = <1>;
+				spi-max-frequency = <10000000>;
+				ssout-cont = <2>;
+			};
+
+			spi2@2 {
+				compatible = "socionext,milbeaut-spidev";
+				reg = <2>;
+				spi-max-frequency = <10000000>;
+				ssout-cont = <2>;
+			};
+
+			spi3@3 {
+				compatible = "socionext,milbeaut-spidev";
+				reg = <3>;
+				spi-max-frequency = <10000000>;
+				ssout-cont = <2>;
+			};
+		};
+
+		i2c0: i2c@e005000 {
+			compatible = "socionext,m20v-i2c";
+			reg = <0x0 0xe005000 0x0 0x400>;
+			interrupts = <0 236 4>;
+			clocks = <&clk M20V_PCLK_PERI_ID>;
+			clock-frequency = <100000>;
+		};
+
+		i2c1: i2c@e005400 {
+			compatible = "socionext,m20v-i2c";
+			reg = <0x0 0xe005400 0x0 0x400>;
+			interrupts = <0 237 4>;
+			clocks = <&clk M20V_PCLK_PERI_ID>;
+			clock-frequency = <100000>;
+		};
+
+		i2c2: i2c@e005800 {
+			compatible = "socionext,m20v-i2c";
+			reg = <0x0 0xe005800 0x0 0x400>;
+			interrupts = <0 238 4>;
+			clocks = <&clk M20V_PCLK_PERI_ID>;
+			clock-frequency = <100000>;
+		};
+
+		i3c0: i3c-master@e007000 {
+			compatible = "snps,dw-i3c-master-1.00a";
+			reg = <0x0 0xe007000 0x0 0x400>;
+			interrupts = <0 240 4>;
+			clocks = <&clk M20V_I3CCLK0_ID>;
+			#address-cells = <3>;
+			#size-cells = <0>;
+			i2c-scl-hz = <100000>;
+			/* Note that i3c0 is not available by default */
+			status = "disabled";
+		};
+
+		i3c1: i3c-master@dff7400 {
+			compatible = "snps,dw-i3c-master-1.00a";
+			reg = <0x0 0xdff7400 0x0 0x400>;
+			interrupts = <0 241 4>;
+			clocks = <&clk M20V_PERI2I3CCLK1_ID>;
+			#address-cells = <3>;
+			#size-cells = <0>;
+			i2c-scl-hz = <100000>;
+		};
+
+		uart0: usio_uart@e700000 {
+			compatible = "socionext,milbeaut-usio-uart";
+			reg = <0x0 0xe700000 0x0 0x10>;
+			interrupts = <0 305 4>, <0 314 4>;
+			interrupt-names = "rx", "tx";
+			clocks = <&clk M20V_HCLK_PERI_MAIN_ID>;
+		};
+
+		uart1: usio_uart@e700010 {
+			compatible = "socionext,milbeaut-usio-uart";
+			reg = <0x0 0xe700010 0x0 0x10>;
+			interrupts = <0 306 4>, <0 315 4>;
+			interrupt-names = "rx", "tx";
+			clocks = <&clk M20V_HCLK_PERI_MAIN_ID>;
+		};
+
+		uart2: usio_uart@e700020 {
+			compatible = "socionext,milbeaut-usio-uart";
+			reg = <0x0 0xe700020 0x0 0x10>;
+			interrupts = <0 307 4>, <0 316 4>;
+			interrupt-names = "rx", "tx";
+			clocks = <&clk M20V_HCLK_PERI_MAIN_ID>;
+		};
+
+		uart3: usio_uart@e700030 {
+			compatible = "socionext,milbeaut-usio-uart";
+			reg = <0x0 0xe700030 0x0 0x10>;
+			interrupts = <0 308 4>, <0 317 4>;
+			interrupt-names = "rx", "tx";
+			clocks = <&clk M20V_HCLK_PERI_MAIN_ID>;
+		};
+
+		uart4: usio_uart@e700040 {
+			compatible = "socionext,milbeaut-usio-uart";
+			reg = <0x0 0xe700040 0x0 0x10>;
+			interrupts = <0 309 4>, <0 318 4>;
+			interrupt-names = "rx", "tx";
+			clocks = <&clk M20V_HCLK_PERI_MAIN_ID>;
+		};
+
+		uart5: usio_uart@e700050 {
+			compatible = "socionext,milbeaut-usio-uart";
+			reg = <0x0 0xe700050 0x0 0x10>;
+			interrupts = <0 310 4>, <0 319 4>;
+			interrupt-names = "rx", "tx";
+			clocks = <&clk M20V_HCLK_PERI_MAIN_ID>;
+		};
+
+		uart6: usio_uart@e700060 {
+			compatible = "socionext,milbeaut-usio-uart";
+			reg = <0x0 0xe700060 0x0 0x10>;
+			interrupts = <0 311 4>, <0 320 4>;
+			interrupt-names = "rx", "tx";
+			clocks = <&clk M20V_HCLK_PERI_MAIN_ID>;
+		};
+
+		uart7: usio_uart@e700070 {
+			compatible = "socionext,milbeaut-usio-uart";
+			reg = <0x0 0xe700070 0x0 0x10>;
+			interrupts = <0 312 4>, <0 321 4>;
+			interrupt-names = "rx", "tx";
+			clocks = <&clk M20V_HCLK_PERI_MAIN_ID>;
+		};
+
+		watchdog@c86c000 {
+			compatible = "arm,sp805", "arm,primecell";
+			reg = <0x0 0xc86c000 0x0 0x1000>;
+			interrupts = <0 10 4>;
+			clocks = <&clk M20V_CPUWDCLK_ID>,
+				 <&clk M20V_PCLK100_ID>;
+			clock-names = "wdog_clk", "apb_pclk";
+		};
+
+		gpio: pinctrl@d151000 {
+			compatible = "socionext,milbeaut-m20v-pinctrl";
+			reg = <0x0 0xd151000 0x0 0x1000>, <0x0 0xc86f000 0x0 0x1000>;
+			reg-names = "pinctrl", "exiu";
+			gpio-controller;
+			#gpio-cells = <2>;
+			interrupt-controller;
+			#interrupt-cells = <2>;
+			interrupts = <0 59 4>, <0 60 4>, <0 61 4>, <0 62 4>,
+				     <0 63 4>, <0 64 4>, <0 65 4>, <0 66 4>,
+				     <0 67 4>, <0 68 4>, <0 69 4>, <0 70 4>,
+				     <0 71 4>, <0 72 4>, <0 73 4>, <0 74 4>;
+			interrupt-names =
+				"pin-337", "pin-338", "pin-339", "pin-340",
+				"pin-341", "pin-342", "pin-343", "pin-344",
+				"pin-345", "pin-346", "pin-347", "pin-348",
+				"pin-349", "pin-350", "pin-351", "pin-320";
+			/*
+			 *	     blacklist for GPIO4 to GPIOT
+			 */
+			blacklist = <0xFFC0 0xC0F0 0xC000 0x8001
+				     0x8000 0x8000 0xFFF0 0xE030
+				     0xF000 0xFF00 0xF000 0x0000
+				     0xF000 0xFC00 0x0000 0x0000
+				     0x0000 0x0000 0xFF00 0x0000
+				     0x0000 0x0000>;
+		};
+
+		gpiopmc: pinctrl@dffb000 {
+			compatible = "socionext,milbeaut-m20v-pmc-pinctrl";
+			reg = <0x0 0xdffb000 0x0 0x1000>, <0x0 0xdff3000 0x0 0x1000>;
+			reg-names = "pinctrl", "exiu";
+			gpio-controller;
+			#gpio-cells = <2>;
+			interrupt-controller;
+			#interrupt-cells = <2>;
+			interrupts = <0 364 4>, <0 365 4>, <0 366 4>, <0 367 4>,
+				     <0 368 4>, <0 369 4>, <0 370 4>, <0 371 4>,
+				     <0 372 4>, <0 373 4>, <0 374 4>, <0 375 4>,
+				     <0 376 4>, <0 377 4>, <0 378 4>, <0 379 4>;
+			interrupt-names =
+				"pin-0", "pin-1", "pin-2", "pin-3",
+				"pin-4", "pin-8", "pin-9", "pin-10",
+				"pin-11", "pin-12", "pin-13", "pin-rsv0",
+				"pin-rsv1", "pin-rsv2", "pin-rsv3", "pin-rsv4";
+			blacklist = <0x0000 0xFF00 0x0000 0xFFC0>; // P0 P1 P2 P3
+		};
+
+		pcie0: pcie@1b000000 {
+			compatible = "socionext,milbeaut-pcie-rc", "snps,dw-pcie";
+			device_type = "pci";
+			reg = <0x0 0x1b000000 0x0 0x400000>, <0x0 0x1a7f0000 0x0 0x10000>,
+			      <0x0 0x1bb00000 0x0 0x100>;
+			reg-names = "dbi", "config", "ctrl";
+			#address-cells = <3>;
+			#size-cells = <2>;
+			clocks = <&clk M20V_PCIEAUXCLK_ID>,
+				 <&clk M20V_ACLK_PCIE0_ID>;
+			clock-names = "auxclk", "busclk";
+			resets = <&rst M20V_PCIE_RESET_PWR>,
+				 <&rst M20V_PCIE_RESET_SOFT0>,
+				 <&rst M20V_PCIE_RESET_BIFU0>,
+				 <&rst M20V_PCIE_RESET_CNT0_MODE>;
+			reset-names = "pwr", "soft", "bifu", "dev";
+			num-lanes = <4>;
+			num-viewport = <4>;
+			bus-range = <0x0 0xff>;
+			ranges =
+			      <0x81000000 0 0x00000000 0 0x1a7e0000 0 0x00010000>,
+			      <0x82000000 0 0x1a000000 0 0x1a000000 0 0x007e0000>;
+			interrupts = <0 386 4>, <0 387 4>;
+			interrupt-names ="msi", "dma";
+			#interrupt-cells = <1>;
+			interrupt-map-mask = <0 0 0 0x7>;
+			interrupt-map = <0 0 0 1 &pcie0_intc 3>,
+					<0 0 0 2 &pcie0_intc 2>,
+					<0 0 0 3 &pcie0_intc 1>,
+					<0 0 0 4 &pcie0_intc 0>;
+			bifur-node = <&pcie1>;
+			pcie0_intc: legacy-interrupt-controller {
+				interrupt-controller;
+				#interrupt-cells = <1>;
+				interrupt-parent = <&gic>;
+				interrupts = <0 385 4>;
+			};
+		};
+
+		/*
+		 * if you'd enable this node, the node of pcie1 must be
+		 * disabled.
+		 */
+/*		pcie0: pcie@1b000000 {
+			compatible = "socionext,milbeaut-pcie-ep",
+				     "snps,dw-pcie";
+			reg = <0 0x1b000000 0 0x400000>,
+			      <0 0x1a000000 0 0x800000>,
+			      <0 0x1bb00000 0 0x100>;
+			reg-names = "dbi",
+				    "addr_space",
+				    "ctrl";
+			clocks = <&clk M20V_PCIEAUXCLK_ID>,
+				 <&clk M20V_ACLK_PCIE0_ID>;
+			clock-names = "auxclk", "busclk";
+			resets = <&rst M20V_PCIE_RESET_PWR>,
+				 <&rst M20V_PCIE_RESET_SOFT0>,
+				 <&rst M20V_PCIE_RESET_BIFU0>,
+				 <&rst M20V_PCIE_RESET_CNT0_MODE>;
+			reset-names = "pwr",
+				      "soft",
+				      "bifu",
+				      "dev";
+			num-ib-windows = <8>;
+			num-ob-windows = <8>;
+			num-lanes = <4>;
+			interrupts = <0 387 4>;
+			interrupt-names = "dma";
+		};
+*/
+		/*
+		 * if you'd enable the pcie1 node, the compatible of
+		 * pcie0 must be "socionext,milbeaut-pcie-rc-bifur".
+		 */
+		pcie1: pcie@1b400000 {
+			compatible = "socionext,milbeaut-pcie-rc-bifur",
+				     "snps,dw-pcie";
+			device_type = "pci";
+			reg = <0x0 0x1b400000 0x0 0x400000>, <0x0 0x1aff0000 0x0 0x10000>,
+			      <0x0 0x1bb00200 0x0 0x100>;
+			reg-names = "dbi", "config", "ctrl";
+			#address-cells = <3>;
+			#size-cells = <2>;
+			clocks = <&clk M20V_PCIEAUXCLK_ID>,
+				 <&clk M20V_ACLK_PCIE1_ID>;
+			clock-names = "auxclk", "busclk";
+			resets = <&rst M20V_PCIE_RESET_PWR>,
+				 <&rst M20V_PCIE_RESET_SOFT1>,
+				 <&rst M20V_PCIE_RESET_BIFU1>,
+				 <&rst M20V_PCIE_RESET_CNT1_MODE>;
+			reset-names = "pwr", "soft", "bifu", "dev";
+			num-lanes = <2>;
+			num-viewport = <4>;
+			ranges =
+			      <0x81000000 0 0x00000000 0 0x1afe0000 0 0x00010000>,
+			      <0x82000000 0 0x1a800000 0 0x1a800000 0 0x007e0000>;
+			interrupts = <0 389 4>, <0 390 4>;
+			interrupt-names ="msi", "dma";
+			#interrupt-cells = <1>;
+			interrupt-map-mask = <0 0 0 0x7>;
+			interrupt-map = <0 0 0 1 &pcie1_intc 3>, /* int_a */
+					<0 0 0 2 &pcie1_intc 2>, /* int_b */
+					<0 0 0 3 &pcie1_intc 1>, /* int_c */
+					<0 0 0 4 &pcie1_intc 0>; /* int_d */
+			pcie1_intc: legacy-interrupt-controller {
+				interrupt-controller;
+				#interrupt-cells = <1>;
+				interrupt-parent = <&gic>;
+				interrupts = <0 388 4>;
+			};
+		};
+
+		exs_32bus {
+			compatible = "simple-bus";
+			#address-cells = <1>;
+			#size-cells = <1>;
+			ranges = <0x0 0x0 0x0 0xfffffffe>; // 00000000h - fffffffeh
+			dma-ranges = <0x0 4 0x0 0xfffffffe>;
+
+			sd0: mmc0@19830000 {
+				compatible = "socionext,milbeaut-m20v-sdhci-3.0";
+				reg = <0x19830000 0x4000>;
+				interrupts = <0 186 0x4>;
+				bus-width = <4>;
+				clocks = <&clk M20V_SDIOCLK_ID>, <&clk M20V_HCLK_SDIO_ID>;
+				clock-names = "core", "iface";
+				/*cap-sdio-irq;*/
+				fujitsu,cmd-dat-delay-select;
+			};
+
+			sd1: mmc1@19820000 {
+				compatible = "socionext,milbeaut-m20v-sdhci-4.0";
+				reg = <0x19820000 0x4000>, <0x19828200 0x200>,  <0x19828000 0x200>;
+				reg-names = "uhs1", "uhs2", "uhs2_sn" ;
+				interrupts = <0 189 0x4>, <0 192 0x4>;
+				interrupt-names = "uhs1", "uhs2";
+				voltage-ranges = <3300 3300>;
+				bus-width = <4>;
+				clocks = <&clk M20V_SDBCLK0_ID>, <&clk M20V_HCLK_UHS10_ID>, <&clk M20V_SD4CLK0_ID>, <&clk M20V_ACLK_UHS20_ID>;
+				clock-names = "core", "iface", "tuning", "aclk";
+				cap-sdio-irq;
+				sd40_enable;
+				uhs2-power-limit = <4>; /* 0:0.72W(default) 1:1.44W 2/3:out-of-spec 4:1.80W */
+				fujitsu,cmd-dat-delay-select;
+				default-sdbclk;
+			};
+
+			sd2: mmc2@19824000 {
+				compatible = "socionext,milbeaut-m20v-sdhci-4.0";
+				reg = <0x19824000 0x4000>, <0x1982c200 0x200>,  <0x1982c000 0x200>;
+				reg-names = "uhs1", "uhs2", "uhs2_sn" ;
+				interrupts = <0 194 0x4>, <0 197 0x4>;
+				interrupt-names = "uhs1", "uhs2";
+				voltage-ranges = <3300 3300>;
+				bus-width = <4>;
+				clocks = <&clk M20V_SDBCLK1_ID>, <&clk M20V_HCLK_UHS11_ID>, <&clk M20V_SD4CLK1_ID>, <&clk M20V_ACLK_UHS21_ID>;
+				clock-names = "core", "iface", "tuning", "aclk";
+				cap-sdio-irq;
+				sd40_enable;
+				uhs2-power-limit = <4>; /* 0:0.72W(default) 1:1.44W 2/3:out-of-spec 4:1.80W */
+				fujitsu,cmd-dat-delay-select;
+				default-sdbclk;
+			};
+
+			nand_controller: nand-controller@19800000 {
+				status = "disabled";
+				compatible = "cdns,hp-nfc";
+				reg = <0x19800000 0x10000>, <0x19000000 0x10000>;
+				reg-names = "reg", "sdma";
+				ecc-sec-size = <1024>;
+				clocks = <&clk M20V_ACLK_NF_ID>;
+				clock-names = "nf_clk";
+				cdns,board-delay-ps = <4830>;
+				interrupts = <0 199 4>;
+				resets = <&rst M20V_NAND_RESET>;
+				#address-cells = <1>;
+				#size-cells = <0>;
+				nand@0 {
+					reg = <0>;
+					label = "nand-1";
+				};
+
+			};
+			emmc: emmc@19810000 {
+				compatible = "socionext,mlb01-emmc-5.0";
+				reg = <0x19810200 0x200>, <0x19810000 0x200>;
+				reg-names = "srs", "hrs";
+				interrupts = <0 213 0x4>;
+				clocks = <&clk M20V_EMMCCLK_ID>, <&clk M20V_ACLK_EMMC_ID>;
+				clock-names = "core", "iface";
+				max-frequency = <200000000>;
+				bus-width = <8>;
+				non-removable;
+				disable-wp;
+				cap-mmc-highspeed;
+				mmc-ddr-1_8v;
+				mmc-hs200-1_8v;
+				mmc-hs400-1_8v;
+				resets = <&rst M20V_EMMC_RESET>;
+			};
+		};
+
+		misc_top: misc_top@d150000 {
+			compatible = "socionext,misctop-m20v";
+			reg = <0x0 0x0d150000 0x0 0x800>;
+		};
+
+		eth0: ethernet {
+			status = "disabled";
+			compatible = "socionext,ogma";
+			reg = <0x0 0x19840000 0x0 0x4000>;
+			interrupts = <0 179 4>, <0 180 4>;
+			resets = <&rst M20V_NETSEC_RESET>;
+
+			clocks = <&clk M20V_ACLK_NSEC_ID>,
+				 <&clk M20V_PCLK_NSEC_ID>,
+				 <&clk M20V_NETSECCLK_ID>,
+				 <&clk M20V_NETRCLK_ID>,
+				 <&clk M20V_NETAUCLK_ID>;
+			clock-names = "NETAUCLK", "NETACLK",
+				      "NETPCLK", "NETCLK",
+				      "NETRCLK";
+
+			#address-cells = <1>;
+			#size-cells = <0>;
+
+			ethphy0: ethernet-phy@1 {
+				device_type = "ethernet-phy";
+				compatible = "ethernet-phy-ieee802.3-c22";
+				reg = <1>;
+			};
+		};
+
+		usb31: usb31@19880000 {
+			compatible = "socionext,f_usb31drd_m20v";
+			reg = <0x0 0x1ba60000 0x0 0x20000>;
+			reg-names = "reg-subsys";
+			#address-cells	= <2>;
+			#size-cells	= <2>;
+			clocks = <&clk M20V_ACLK_USB_ID >;
+			clock-names = "apb_bus";
+			ranges;
+			resets = <&rst M20V_USB_RESET>, <&rst M20V_USB_HIF>;
+			reset-names = "reset", "hif";
+			dwc3: dwc3@19880000 {
+				compatible = "snps,dwc3";
+				reg = <0x0 0x19880000 0x0 0x10000>;
+				interrupts = <0 185 0x4>;
+				clocks = <&uclk48xi>, <&clk M20V_ACLK_USB_ID >, <&uclk48xi_div2>;
+				clock-names = "ref", "bus_early", "suspend";
+				snps,has-lpm-erratum = <1>;
+				dr_mode = "peripheral";	/* or host */
+			};
+		};
+		cnn_drv: cnn_drv{
+			compatible = "verisilicon,vip-device";
+			#address-cells = <2>;
+			#size-cells = <2>;
+			ranges;
+			interrupts = <0 95 4>;
+			dma-ranges = <0x0 4 0x0 0xfffffffe>;
+		};
+
+		arm_32bus {
+			compatible = "simple-bus";
+			#address-cells = <1>;
+			#size-cells = <1>;
+			ranges = <0x0 0x0 0x0 0xffffffff>; // 00000000h - fffffffeh
+			dma-ranges = <0x0 4 0x0 0xfffffffe>;
+
+			arm_xdmac0: dma-controller@c840000 {
+				status = "disabled";
+				compatible = "socionext,milbeaut-m10v-xdmac";
+				reg = <0xc840000 0x1000>;
+				interrupts = <0 2 0x4>,
+					     <0 3 0x4>,
+					     <0 4 0x4>,
+					     <0 5 0x4>;
+				#dma-cells = <1>;
+				dma-channels = <4>;
+			};
+
+			arm_xdmac1: dma-controller@c850000 {
+				status = "okay";
+				compatible = "socionext,milbeaut-m10v-xdmac";
+				reg = <0xc850000 0x1000>;
+				interrupts = <0 6 0x4>,
+					     <0 7 0x4>,
+					     <0 8 0x4>,
+					     <0 9 0x4>;
+				#dma-cells = <1>;
+				dma-channels = <4>;
+			};
+		};
+
+		pwm0: pwm@e002000 {
+			status = "disabled";
+			compatible = "socionext,milbeaut-pwm";
+			reg = <0x0 0x0e002000 0x0 0x400>, <0x0 0x0e180000 0x0 0x10000>;
+			interrupts = <0 248 4>, <0 252 4>;
+			clocks = <&clk M20V_RCLK_ID>;
+			/* all the pwm units share the same clock */
+			base-rate = <13500000>; /* ask for this input rate */
+			#pwm-cells = <3>;
+		};
+
+		pwm1: pwm@e002400 {
+			status = "disabled";
+			compatible = "socionext,milbeaut-pwm";
+			reg = <0x0 0x0e002400 0x0 0x400>, <0x0 0x0e190000 0x0 0x10000>;
+			interrupts = <0 249 4>, <0 253 4>;
+			clocks = <&clk M20V_RCLK_ID>;
+			#pwm-cells = <3>;
+		};
+
+		pwm2: pwm@e002800 {
+			status = "disabled";
+			compatible = "socionext,milbeaut-pwm";
+			reg = <0x0 0x0e002800 0x0 0x400>, <0x0 0x0e1a0000 0x0 0x10000>;
+			interrupts = <0 250 4>, <0 254 4>;
+			clocks = <&clk M20V_RCLK_ID>;
+			#pwm-cells = <3>;
+		};
+
+		pwm3: pwm@e002c00 {
+			status = "disabled";
+			compatible = "socionext,milbeaut-pwm";
+			reg = <0x0 0x0e002c00 0x0 0x400>, <0x0 0x0e1b0000 0x0 0x10000>;
+			interrupts = <0 251 4>, <0 255 4>;
+			clocks = <&clk M20V_RCLK_ID>;
+			#pwm-cells = <3>;
+		};
+
+		noc: noc@14c0a000 {
+			compatible = "socionext,noc-m20v";
+			reg = <0x0 0x14c0a000 0x0 0x80>, <0x0 0x14c0d000 0x0 0x80>, <0x0 0x14c0e000 0x0 0x80>;
+			reg-names = "bar02", "bar11", "bar12";
+		};
+
+		timer64_0: timer64_0@e001000 {
+			compatible = "socionext,milbeaut-timer64";
+			reg = <0x0 0x0e001000 0x0 0x400>;
+			clocks = <&clk M20V_TMR64CLK_ID>;
+			clock-names = "base";
+			dmas = <&hdmac1 40>;
+			dma-names = "rx";
+		};
+
+		timer64_1: timer64_1@e001400 {
+			compatible = "socionext,milbeaut-timer64";
+			reg = <0x0 0x0e001400 0x0 0x400>;
+			clocks = <&clk M20V_TMR64CLK_ID>;
+			clock-names = "base";
+			dmas = <&hdmac1 41>;
+			dma-names = "rx";
+		};
+
+		timer64_2: timer64_2@e001800 {
+			compatible = "socionext,milbeaut-timer64";
+			reg = <0x0 0x0e001800 0x0 0x400>;
+			clocks = <&clk M20V_TMR64CLK_ID>;
+			clock-names = "base";
+			dmas = <&hdmac1 42>;
+			dma-names = "rx";
+		};
+
+		snrtos_ipcu00: snrtos0@0 {
+			compatible = "socionext,ipcu-device";
+			reg = <0x0 0x0c851000 0x0 0x1000>;
+		};
+
+		snrtos_ipcu10: snrtos1@0 {
+			compatible = "socionext,ipcu-device";
+			reg = <0x0 0x0c852000 0x0 0x1000>;
+		};
+
+		snrtos_ipcu20: snrtos2@0 {
+			compatible = "socionext,ipcu-device";
+			reg = <0x0 0x0c853000 0x0 0x1000>;
+		};
+
+		dsp_32bus {
+			compatible = "simple-bus";
+			#address-cells = <1>;
+			#size-cells = <1>;
+			ranges = <0x0 0x0 0x0 0xfffffffe>; // 00000000h - fffffffeh
+			dma-ranges = <0x0 4 0x0 0xfffffffe>;
+
+			xm6: xm6_peri {
+				compatible = "socionext,dsp-peri-device";
+				is-xm6 = <1>;
+				reg = <0x1d000000 0xcc>, <0x1c000000 0x80000>, <0x1c200000 0x10000>;
+				dmas = <&arm_xdmac1 0>;
+				dma-names = "your_xdmac";
+				//clocks = <&clk M20V_DSPCLK0_ID>, <&clk M20V_DSPCLK1_ID>, <&clk M20V_DSPTIMCLK_ID>, <&clk M20V_HCLK_DSP_ID>;
+				//clock-names = "dspclk0", "dspclk1", "dsptimclk", "hclk_dsp";
+			};
+
+			cnn: cnn_peri {
+				compatible = "socionext,dsp-peri-device";
+				is-xm6 = <0>;
+				reg = <0x1d000000 0xcc>, <0x1d04042c 0x4>;
+				//clocks = <&clk M20V_CNNCLK_ID>, <&clk M20V_ACLK_CNN_ID>, <&clk M20V_HCLK_DSP_ID>;
+				//clock-names = "cnnclk", "aclk_cnn", "hclk_dsp";
+			};
+
+			dsp_ipcu_0: dsp_ipcu_0 {
+				compatible = "socionext,dsp-ipcu-device";
+				reg = <0x1d001000 0x904>;
+				interrupts = <0 91 4>;
+				dst-mb = <0>;
+				src-int-ch = <0>;
+				dst-int-ch = <4>;
+				direction = "send";
+			};
+
+			dsp_ipcu_1: dsp_ipcu_1 {
+				compatible = "socionext,dsp-ipcu-device";
+				interrupts = <0 92 4>;
+				dst-mb = <1>;
+				src-int-ch = <4>;
+				dst-int-ch = <1>;
+				direction = "recv";
+			};
+
+			dsp_ipcu_2: dsp_ipcu_2 {
+				compatible = "socionext,dsp-ipcu-device";
+				reg = <0x1d001000 0x904>;
+				interrupts = <0 93 4>;
+				dst-mb = <2>;
+				src-int-ch = <2>;
+				dst-int-ch = <5>;
+				direction = "send";
+			};
+
+			dsp_ipcu_3: dsp_ipcu_3 {
+				compatible = "socionext,dsp-ipcu-device";
+				interrupts = <0 94 4>;
+				dst-mb = <3>;
+				src-int-ch = <5>;
+				dst-int-ch = <3>;
+				direction = "recv";
+			};
+		};
+		
+		exstop_int: exsint@1ba01010 {
+			compatible = "socionext,exsint-m20v";
+			#address-cells  = <1>;
+			#size-cells = <1>;
+			reg =<0x0 0x1ba01010 0x0 0x4>, <0x0 0x1ba00020 0x0 0x4>;
+			ret-names = "intstat", "intmsk";
+			interrupts = <0 210 0x4>;
+		};
+	};
+};

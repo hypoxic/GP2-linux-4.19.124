@@ -1,0 +1,29 @@
+Milbeaut IPCU driver
+
+Required properties:
+- compatible: should be "socionext,ipcu-device"
+- reg: register address and size of each unit.
+       this property is referred only at the node which dst-channel is 0.
+	   size should be 0x1000.
+- dst-unit: IPCU unit no (0/1/2)
+- dst-mb: mailbox no in unit(0-7)
+- src-int-ch: IPCUINT no as source(message send side)
+  if this property is not, src-int-ch is set tha value "dst-mb"+8.
+- dst-int-ch: IPCUINT no as destination(message receiver side)
+  if this property is not, src-int-ch is set tha value "dst-mb".
+- interrupts: three interrupts specifier
+- direction: direction of message: send=Linux->RTOS, recv=RTOS->Linux
+
+Example:
+	snrtos_ipcu00: snrtos0@0 {
+		compatible = "socionext,ipcu-device";
+		reg = <0x0c851000 0x1000>;
+		dst-unit = <0>;
+		dst-mb = <0>;
+		src-int-ch = <8>;
+		dst-int-ch = <0>;
+		interrupts = <0 43 4>;
+		direction = "recv";
+	};
+
+

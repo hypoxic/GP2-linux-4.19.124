@@ -1,0 +1,13 @@
+// SPDX-License-Identifier: GPL-2.0
+/* Socionext Milbeaut KARINE Evaluation Board */
+/dts-v1/;
+#include "milbeaut-karine-vbd-ble-linux.dts"
+
+/ {
+	model = "Socionext KARINE EVB for 8GB";
+
+	memory@50000000 {
+		device_type = "memory";
+		reg = <0 0x50000000 0 0xc000000>;
+	};
+};

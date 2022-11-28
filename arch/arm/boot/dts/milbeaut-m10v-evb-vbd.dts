@@ -1,0 +1,561 @@
+// SPDX-License-Identifier: GPL-2.0
+/* Socionext Milbeaut M10V Evaluation Board */
+/dts-v1/;
+#include "milbeaut-m10v.dtsi"
+#include "mlb01-rtos.h"
+
+/ {
+	model = "Socionext M10V EVB w/ RTOS VBD";
+	compatible = "socionext,milbeaut-m10v-evb", "socionext,sc2000a";
+
+	aliases {
+		serial0 = &uart1;
+	};
+
+	cpus {
+		#address-cells = <1>;
+		#size-cells = <0>;
+		enable-method = "socionext,milbeaut-m10v-smp";
+		cpu@f02 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a7";
+			reg = <0xf02>;
+		};
+		cpu@f03 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a7";
+			reg = <0xf03>;
+		};
+	};
+
+	memory {
+		device_type = "memory";
+		reg = <0x40000000  0x05200000>;
+	};
+
+	chosen {
+//		bootargs = "consoleblank=0 loglevel=4 init=/sbin/finit root=/dev/ipcublk rootwait ro console=ttyUSI0,115200n8 console=/dev/tty1 ";
+//		bootargs = "consoleblank=0 loglevel=4 rdinit=/sbin/finit rootwait earlycon";
+		bootargs = "consoleblank=0 loglevel=4 init=/sbin/finit root=/dev/ipcublk rootwait earlycon nr_cpus=2 maxcpus=1";
+		stdout-path = "serial0:115200n8";
+		linux,initrd-start = <0x43000000>;
+		linux,initrd-end =   <0x43F00000>;
+	};
+
+	clocks {
+		uclk40xi: uclk40xi {
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency = <40000000>;
+		};
+
+		dummy_clk: clk20m { /* for SD */
+			compatible = "fixed-clock";
+			#clock-cells = <0>;
+			clock-frequency = <20000000>;
+		};
+	};
+
+	vcc_sdhci3: regulator-vcc-sdhci3 {
+		compatible = "regulator-fixed";
+
+		regulator-name = "SDHCI3 Vcc";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+
+		/* gpio = <&pinctrl MLB01_PIN(6,5) GPIO_ACTIVE_HIGH>;*/
+		gpio = <&pinctrl 53 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		/* enable-at-boot;*/
+	};
+
+	vcc_sdhci2: regulator-vcc-sdhci2 {
+		compatible = "regulator-fixed";
+
+		regulator-name = "SDHCI2 Vcc";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+
+		/* gpio = <&pinctrl MLB01_PIN(6,4) GPIO_ACTIVE_HIGH>;*/
+		gpio = <&pinctrl 52 GPIO_ACTIVE_HIGH>;
+		enable-active-high;
+		/* enable-at-boot;*/
+	};
+
+	soc {
+		gic: interrupt-controller@1d001000 {
+			black-list = <0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21    23 24       27    29 30       33 34    36       39    41    43 44    46    48    50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90    92 93 94 95 96 97 98 99 100 101 102 103 104 105 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 121 122 123 124 125 126 127 128 129 130 131 132 133 134 135 136 137 138 139 140     142 143 144 145 146 147 148     150 151 152 153 154 155 156 157 158 159 160 161 162 163 164 165 166 167 168 169 170 171 172 173 174 175 176 177 178 179 180 181 182 183 184 185 186 187 188 189 190 191 192 193 194 195 196 197 198 199 200 201 202 203 204 205 206 207 208 209 210 211 212 213 214 215 216 217 218 219 220 221 222 223 224 225 226 227 228 229 230 231 232 233 234 235 236 237 238 239 240 241 242 243 244 245 246 247 248 249 250 251 252 253 254 255 256 257 258 259 260                         267 268 269 270 271 272         275 276 277 278 279 280 281 282 283 284 285 286 287>;
+//			black-list = <0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99 100 101 102 103 104 105 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 121 122 123 124 125 126 127 128 129 130 131 132 133 134 135 136 137 138 139 140 141 142 143 144 145 146 147 148 149 150 151 152 153 154 155 156 157 158 159 160 161 162 163 164 165 166 167 168 169 170 171 172 173 174 175 176 177 178 179 180 181 182 183 184 185 186 187 188 189 190 191 192 193 194 195 196 197 198 199 200 201 202 203 204 205 206 207 208 209 210 211 212 213 214 215 216 217 218 219 220 221 222 223 224 225 226 227 228 229 230 231 232 233 234 235 236 237 238 239 240 241 242 243 244 245 246 247 248 249 250 251 252 253 254 255 256 257 258 259 260 261 262 263 264 265 266 267 268 269 270 271 272 273 274 275 276 277 278 279 280 281 282 283 284 285 286 287>;
+		};
+
+		uart0: serial@1e700000 { /* PE2, PE3   */
+			status = "disabled";
+			compatible = "socionext,milbeaut-usio-uart";
+			reg = <0x1e700000 0x10>;
+			interrupts = <0 140 0x4>, <0 148 0x4>;
+			interrupt-names = "rx", "tx";
+			clocks = <&clk M10V_HCLK_ID>;
+			flwen = <0>;//Disable flow control. Enable flow control if set it to 1
+		};
+
+		uart2: serial@1e700020 { /* PE0, PE1 */
+			status = "disabled";
+			compatible = "socionext,milbeaut-usio-uart";
+			reg = <0x1e700020 0x10>;
+			interrupts = <0 142 0x4>, <0 150 0x4>;
+			interrupt-names = "rx", "tx";
+			clocks = <&clk M10V_HCLK_ID>;
+		};
+
+		uart3: serial@1e700030 { /* PY1, PY2 */
+			status = "disabled";
+			compatible = "socionext,milbeaut-usio-uart";
+			reg = <0x1e700030 0x10>;
+			interrupts = <0 143 0x4>, <0 151 0x4>;
+			interrupt-names = "rx", "tx";
+			clocks = <&clk M10V_HCLK_ID>;
+		};
+
+		uart4: serial@1e700040 {
+			status = "disabled";
+			compatible = "socionext,milbeaut-usio-uart";
+			reg = <0x1e700040 0x10>;
+			interrupts = <0 144 0x4>, <0 152 0x4>;
+			interrupt-names = "rx", "tx";
+			clocks = <&clk M10V_HCLK_ID>;
+		};
+
+		uart5: serial@1e700050 {
+			status = "disabled";
+			compatible = "socionext,milbeaut-usio-uart";
+			reg = <0x1e700050 0x10>;
+			interrupts = <0 145 0x4>, <0 153 0x4>;
+			interrupt-names = "rx", "tx";
+			clocks = <&clk M10V_HCLK_ID>;
+		};
+
+		uart6: serial@1e700060 {
+			status = "disabled";
+			compatible = "socionext,milbeaut-usio-uart";
+			reg = <0x1e700060 0x10>;
+			interrupts = <0 146 0x4>, <0 154 0x4>;
+			interrupt-names = "rx", "tx";
+			clocks = <&clk M10V_HCLK_ID>;
+		};
+
+		uart7: serial@1e700070 {
+			status = "disabled";
+			compatible = "socionext,milbeaut-usio-uart";
+			reg = <0x1e700070 0x10>;
+			interrupts = <0 147 0x4>, <0 155 0x4>;
+			interrupt-names = "rx", "tx";
+			clocks = <&clk M10V_HCLK_ID>;
+		};
+
+		pinctrl: pinctrl@1d022000 {
+			blacklist = <	/* P0 thru PP, bit = 1 = illegal */
+				0xFFFF //P1P0
+				0xFFFF //P3P2
+				0xFFFF //P5P4
+				0xDFFF //P7P6 P75
+				0xFF7F //P9P8　P87
+				0xFFFF //PBPA
+				0xFFFF //PDPC
+				0xE7CF //PFPE PE4,PE5,PF3,PF4
+				0xFFFF //PHPG
+				0xFFFF //PJPW
+				0xFFFF //PLPK
+				0xFFFF //PNPM
+				0xFBFF //PPPY P2
+			 >;
+#ifndef NO_EXIU
+			interrupts = <0 54 4>, <0 55 4>, <0 56 4>, <0 57 4>,
+					<0 58 4>, <0 59 4>, <0 60 4>, <0 61 4>,
+					<0 62 4>, <0 63 4>, <0 64 4>, <0 65 4>,
+					<0 66 4>, <0 67 4>, <0 68 4>, <0 69 4>;
+			interrupt-names = "pin-48", "pin-49", "pin-50",
+					 "pin-51", "pin-52", "pin-53",
+					 "pin-54", "pin-55", "pin-56",
+					 "pin-57", "pin-58", "pin-59",
+					 "pin-60", "pin-61", "pin-62",
+					 "pin-63";
+#endif
+		};
+
+		hdmac0: hdmac@1e100000 {
+			status = "disabled";
+			compatible = "socionext,milbeaut-m10v-hdmac";
+			reg = <0x1e100000 0x10000>;
+			interrupts = <0 124 4>,
+				     <0 125 4>,
+				     <0 126 4>,
+				     <0 127 4>,
+				     <0 128 4>,
+				     <0 129 4>,
+				     <0 130 4>,
+				     <0 131 4>;
+			#dma-cells = <1>;
+			priority-rotate;
+			clocks = <&dummy_clk>;
+		};
+
+		hdmac1: hdmac@1e110000 {
+			status = "disabled";
+		};
+
+		sni_spi0: spi@1e800000 {
+			status = "disabled";
+			compatible = "socionext,milbeaut-spi";
+			clocks = <&clk M10V_SPICLK_ID>;
+			#interrupt-cells = <2>;
+			interrupts = <0 156 4>;
+			reg = <0x1e800000 0x100>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			/* dmas = <&hdmac2 1>, <&hdmac2 0>; */
+			dma-names = "tx", "rx";
+		};
+
+		sni_spi1: spi@1e800100 {
+			status = "disabled";
+		};
+
+		sni_spi2: sni_spi@1e800200 {
+			status = "disabled";
+			compatible = "socionext,milbeaut-spi";
+			clocks = <&clk M10V_SPICLK_ID>;
+			#interrupt-cells = <2>;
+			interrupts = <0 158 4>;
+			reg = <0x1e800200 0x100>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			/* dmas = <&hdmac2 1>, <&hdmac2 0>; */
+			dma-names = "tx", "rx";
+		};
+
+		timer64: timer64@1e000100 {
+			status = "disabled";
+		};
+
+		sdhci3: mmc@1b010000 {
+			vmmc-supply = <&vcc_sdhci3>;
+		};
+
+		sdhci2: mmc@19130000 {	/* Used by RTOS */
+			vmmc-supply = <&vcc_sdhci2>;
+			status = "disabled";
+		};
+
+		sdhci1: mmc@1b000000 { /* CH1 UHS-I/WiFi CN6 */
+			keep-power-in-suspend;
+			non-removable;
+			quirk-host-off-card-on;
+		};
+
+		emmc: mmc@19120000 {
+			compatible = "socionext,milbeaut-m10v-emmc-5.0";
+			reg = <0x19120200 0x200>, <0x19120000 0x200>;
+			reg-names = "srs", "hrs";
+			interrupts = <0 276 0x4>;
+			clocks = <&clk M10V_EMMCCLK_ID>, <&dummy_clk>;
+			clock-names = "core", "iface";
+			max-frequency = <200000000>;
+			bus-width = <8>;
+			non-removable;
+			disable-wp;
+			cap-mmc-highspeed;
+			mmc-ddr-1_8v;
+			mmc-hs200-1_8v;
+			mmc-hs400-1_8v;
+			resets = <&reset 3>;
+		};
+
+		exstop_int: exsint@1b110f00 {
+			status = "disabled";
+		};
+
+		pwm0: pwm@1e120000 {
+			status = "disabled";
+			compatible = "socionext,milbeaut-m10v-pwm";
+			reg = <0x1e001000 0x400>, <0x1e120000 0x10000>;
+			interrupts = <0 110 4>, <0 114 4>;
+			clocks = <&clk M10V_RCLK_ID>;
+			/* all the pwm units share the same clock */
+			base-rate = <13500000>; /* ask for this input rate */
+			#pwm-cells = <3>;
+		};
+
+		pwm1: pwm@1e130000 {
+			status = "disabled";
+			compatible = "socionext,milbeaut-m10v-pwm";
+			reg = <0x1e001400 0x400>, <0x1e130000 0x10000>;
+			interrupts = <0 111 4>, <0 115 4>;
+			clocks = <&clk M10V_RCLK_ID>;
+			#pwm-cells = <3>;
+		};
+
+		pwm2: pwm@1e140000 {
+			status = "disabled";
+			compatible = "socionext,milbeaut-m10v-pwm";
+			reg = <0x1e001800 0x400>, <0x1e140000 0x10000>;
+			interrupts = <0 112 4>, <0 116 4>;
+			clocks = <&clk M10V_RCLK_ID>;
+			#pwm-cells = <3>;
+		};
+
+		pwm3: pwm@1e150000 {
+			status = "disabled";
+			compatible = "socionext,milbeaut-m10v-pwm";
+			reg = <0x1e001c00 0x400>, <0x1e150000 0x10000>;
+			interrupts = <0 113 4>, <0 117 4>;
+			clocks = <&clk M10V_RCLK_ID>;
+			#pwm-cells = <3>;
+		};
+
+		i2c0: i2c@1e003000 {
+			compatible = "socionext,milbeaut-m10v-i2c";
+			reg = <0x1e003000 0x400>;
+			interrupts = <0 101 4>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			clocks = <&clk M10V_PCLK_ID>;
+		};
+
+		i2c1: i2c@1e003400 {
+			compatible = "socionext,milbeaut-m10v-i2c";
+			reg = <0x1e003400 0x400>;
+			interrupts = <0 102 4>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			clocks = <&clk M10V_PCLK_ID>;
+		};
+
+		i2c2: i2c@1e003800 {
+			compatible = "socionext,milbeaut-m10v-i2c";
+			reg = <0x1e003800 0x400>;
+			interrupts = <0 103 4>;
+			#address-cells = <1>;
+			#size-cells = <0>;
+			clocks = <&clk M10V_PCLK_ID>;
+		};
+
+	};
+
+	/* For USB2.0/1.1 host and device mode */
+	usb_ehci: usb@1b070000 {
+		compatible = "generic-ehci";
+		reg = <0x1b070000 0x100>;
+		interrupts = <0 262 4>;
+		resets = <&reset 0>;
+		status = "okay";
+	};
+
+	usb_ohci: usb@1b080000 {
+		status = "okay";
+		compatible = "generic-ohci";
+		reg = <0x1b080000 0x100>;
+		interrupts = <0 263 4>;
+	};
+
+	usb20dev: usb20dev@1b050000 {
+		status = "okay";
+		compatible = "socionext,usb2m9m,f_usb20dc_lfp";
+		reg = <0x1b050000 0x10000>, <0x1b040000 0x1000>;
+		reg-names = "udc", "hdmac";
+		interrupts = <0 261 0x4>;
+		clocks = <&dummy_clk>, <&dummy_clk>, <&dummy_clk>, <&dummy_clk>;
+		clock-names = "dummy_clk", "dummy_clk", "dummy_clk";
+		resets = <&reset 1>;
+	};
+
+	shared_commem: shared_commem {
+		compatible = "socionext, shared-commem";
+		buf-addr = <GET_IPCU_BUFFER_ADDR_VBD>;
+		buf-size = <GET_IPCU_BUFFER_SIZE_VBD>;
+		sync-addr = <GET_IPCU_SYNC_ADDR_VBD>;
+		sync-size = <GET_IPCU_SYNC_SIZE_VBD>;
+		rd-pointer-addr = <GET_TS_READ_POINTER_ADDR_VBD>;
+		rd-pointer-size = <GET_TS_READ_POINTER_SIZE_VBD>;
+		wt-pointer-addr = <GET_TS_WRITE_POINTER_ADDR_VBD>;
+		wt-pointer-size = <GET_TS_WRITE_POINTER_SIZE_VBD>;
+		movie-rec-addr = <GET_MOVIE_RECORD0_DFS_ADDR_VBD>;
+		movie-rec-size = <GET_MOVIE_RECORD0_DFS_SIZE_VBD>;
+		term-io-addr = <GET_TERMINAL_IO_ADDR_VBD>;
+		term-io-size = <GET_TERMINAL_IO_SIZE_VBD>;
+		string-addr = <GET_STRING_ADDR_VBD>;
+		string-size = <GET_STRING_SIZE_VBD>;
+		ribery-addr = <GET_RIBERY_STREAM_ADDR_VBD>;
+		ribery-size = <GET_RIBERY_STREAM_SIZE_VBD>;
+		audio-addr = <GET_AUDIO_STREAM_ADDR_VBD>;
+		audio-size = <GET_AUDIO_STREAM_SIZE_VBD>;
+		raw-addr = <GET_RAW_STREAM_ADDR_VBD>;
+		raw-size = <GET_RAW_STREAM_SIZE_VBD>;
+		yuv-addr = <GET_YUV_STREAM_ADDR_VBD>;
+		yuv-size = <GET_YUV_STREAM_SIZE_VBD>;
+		hevc-addr = <GET_HEVC_STREAM_ADDR_VBD>;
+		hevc-size = <GET_HEVC_STREAM_SIZE_VBD>;
+		mjpeg-addr = <GET_MJPEG_STREAM_ADDR_VBD>;
+		mjpeg-size = <GET_MJPEG_STREAM_SIZE_VBD>;
+		cap-addr = <GET_CAP_INFO_ADDR_VBD>;
+		cap-size = <GET_CAP_INFO_SIZE_VBD>;
+		osd-addr = <GET_OSD_INFO_ADDR_VBD>;
+		osd-size = <GET_OSD_INFO_SIZE_VBD>;
+		audio-out-addr = <GET_AUDIO_OUT_ADDR_VBD>;
+		audio-out-size = <GET_AUDIO_OUT_SIZE_VBD>;
+		metadata-addr = <GET_METADATA_ADDR_VBD>;
+		metadata-size = <GET_METADATA_SIZE_VBD>;
+		ribery-stream-s-addr = <GET_RIBERY_STREAM_S_ADDR_VBD>;
+		ribery-stream-s-size = <GET_RIBERY_STREAM_S_SIZE_VBD>;
+	};
+	trampoline: trampoline@454FFF00 {
+		compatible = "socionext,smp-trampoline";
+		reg = <SHMEM_TRAMPOLINE_OFFSET_VBD SHMEM_TRAMPOLINE_SIZE>;
+	};
+	cpuswitch:cpuswitch@40000000 {
+		compatible = "socionext,smp-cpuswitch";
+		reg = <0x00000000 0x100>,<0x0000ff00 0x100>,
+			<GET_CPU_HOTPLUG_INFOR 8>,<0x1D021000 0x100>;
+		bootstrap = <0x45500000>; // bootstrap address
+		sgi_no = <8>;
+	};
+	sn_ipcufs_rtos: snipcufs_rtos@0 {
+		compatible = "socionext,ipcufs-rtos";
+		ipcu_unit = <0>; // IPCU Unit
+		ipcu_mb = <2 3>;  // Send/Recv Channel
+		reg = <GET_IPCU_BUFFER_ADDR_VBD 0x1000>;
+	};
+	sn_vblk_rtos: snvblk_rtos@0 {
+		status = "okay";
+		compatible = "socionext,vblk-rtos";
+		ipcu_unit = <1>;  // IPCU Unit
+		ipcu_mb = <1 0>;  // Send/Recv Channel
+		reg = <GET_IPCU_BUFFER_ADDR_VBD 0x1000>;  // IPCU buffer top addr
+	};
+
+/* ipcu unit0 */
+	snrtos_ipcu00: snrtos0@0 {
+		compatible = "socionext,ipcu-device";
+		dst-unit = <0>;
+		dst-mb = <0>;
+		interrupts = <0 22 4>;
+		direction = "recv";
+		reg = <0x1c251000 0x1000>, <GET_IPCU_SYNC_ADDR_VBD 0x32>; // IPCU sync top addr
+	};
+	snrtos_ipcu01: snrtos0@1 {
+		compatible = "socionext,ipcu-device";
+		dst-unit = <0>;
+		dst-mb = <1>;
+		interrupts = <0 31 4>;
+		direction = "send";
+	};
+
+	snrtos_ipcu02: snrtos0@2 {
+		compatible = "socionext,ipcu-device";
+		dst-unit = <0>;
+		dst-mb = <2>;
+		interrupts = <0 32 4>;
+		direction = "send";
+	};
+
+	snrtos_ipcu03: snrtos0@3 {
+		compatible = "socionext,ipcu-device";
+		dst-unit = <0>;
+		dst-mb = <3>;
+		interrupts = <0 25 4>;
+		direction = "recv";
+	};
+
+	snrtos_ipcu04: snrtos0@4 {
+		compatible = "socionext,ipcu-device";
+		dst-unit = <0>;
+		dst-mb = <4>;
+		interrupts = <0 26 4>;
+		direction = "recv";
+	};
+
+	snrtos_ipcu05: snrtos0@5 {
+		compatible = "socionext,ipcu-device";
+		dst-unit = <0>;
+		dst-mb = <5>;
+		interrupts = <0 35 4>;
+		direction = "send";
+	};
+
+	snrtos_ipcu06: snrtos0@6 {
+		compatible = "socionext,ipcu-device";
+		dst-unit = <0>;
+		dst-mb = <6>;
+		interrupts = <0 28 4>;
+		direction = "recv";
+	};
+
+	snrtos_ipcu07: snrtos0@7 {
+		compatible = "socionext,ipcu-device";
+		dst-unit = <0>;
+		dst-mb = <7>;
+		interrupts = <0 37 4>;
+		direction = "send";
+	};
+
+/* ipcu unit1 */
+	snrtos_ipcu10: snrtos1@0 {
+		compatible = "socionext,ipcu-device";
+		dst-unit = <1>;
+		dst-mb = <0>;
+		src-int-ch = <6>;
+		interrupts = <0 38 4>;
+		direction = "recv";
+		reg = <0x1c252000 0x1000>, <GET_IPCU_SYNC_ADDR_VBD 0x32>; // IPCU sync top addr
+	};
+
+	snrtos_ipcu11: snrtos1@1 {
+		compatible = "socionext,ipcu-device";
+		dst-unit = <1>;
+		dst-mb = <1>;
+		src-int-ch = <7>;
+		interrupts = <0 45 4>;
+		direction = "send";
+	};
+
+	snrtos_ipcu12: snrtos1@2 {
+		compatible = "socionext,ipcu-device";
+		dst-unit = <1>;
+		dst-mb = <2>;
+		src-int-ch = <8>;
+		interrupts = <0 40 4>;
+		direction = "recv";
+	};
+
+	snrtos_ipcu13: snrtos1@3 {
+		compatible = "socionext,ipcu-device";
+		dst-unit = <1>;
+		dst-mb = <3>;
+		src-int-ch = <9>;
+		interrupts = <0 47 4>;
+		direction = "send";
+	};
+
+	snrtos_ipcu14: snrtos1@4 {
+		compatible = "socionext,ipcu-device";
+		dst-unit = <1>;
+		dst-mb = <4>;
+		src-int-ch = <10>;
+		dst-int-ch = <4>;
+		interrupts = <0 42 4>;
+		direction = "recv";
+	};
+
+	snrtos_ipcu15: snrtos1@5 {
+		compatible = "socionext,ipcu-device";
+		dst-unit = <1>;
+		dst-mb = <5>;
+		src-int-ch = <11>;
+		dst-int-ch = <5>;
+		interrupts = <0 49 4>;
+		direction = "send";
+	};
+	timer { /* The Generic Timer */
+		arm,cpu-registers-not-fw-configured;
+	};
+
+};
